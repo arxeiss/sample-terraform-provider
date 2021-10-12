@@ -11,5 +11,12 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Generated provider
+provider/terraform-provider-sdk
+
+# Provider related:
+provider/config/terraform.d
+provider/config/.terraform
+provider/config/.terraform.lock.hcl
+provider/config/terraform.tfstate
+provider/config/terraform.tfstate.backup
