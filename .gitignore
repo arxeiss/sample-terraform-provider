@@ -20,3 +20,6 @@ provider/config/.terraform
 provider/config/.terraform.lock.hcl
 provider/config/terraform.tfstate
 provider/config/terraform.tfstate.backup
+
+# Server related
+server/superdupercloud.db
