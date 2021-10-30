@@ -25,11 +25,11 @@ func Provider() *schema.Provider {
 					"description": {Type: schema.TypeString, Required: true},
 				},
 				CreateContext: func(c context.Context, rd *schema.ResourceData, i interface{}) diag.Diagnostics {
-					log.Println("AAAAAAAAAAA ================================ ================================= AAAAAAAAAAAAAAAAAAAAAA")
+					log.Println("AAAAAAAAAAA ================================ ================= AAAAAAAAAAAAAAAAAAAAAA")
 					return nil
 				},
 				ReadContext: func(c context.Context, rd *schema.ResourceData, i interface{}) diag.Diagnostics {
-					log.Println("AAAAAAAAAAA ================================ ================================= AAAAAAAAAAAAAAAAAAAAAA")
+					log.Println("AAAAAAAAAAA ================================ ================= AAAAAAAAAAAAAAAAAAAAAA")
 					return nil
 				},
 				UpdateContext: schema.NoopContext,

@@ -1,4 +1,14 @@
-.PHONY: terraform_build start_server
+.PHONY: lint fix_lint install_tools terraform_build start_server
+
+lint:
+	golangci-lint run ./...
+
+fix_lint:
+	golangci-lint run --fix
+
+install_tools:
+	@echo Installing tools from tools.go
+	go list -f '{{range .Imports}}{{.}} {{end}}' tools.go | xargs go install
 
 terraform_build:
 	@echo Build and replace terraform-provider-sdk

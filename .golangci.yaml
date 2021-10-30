@@ -1,0 +1,53 @@
+---
+linters:
+  enable:
+    # By Default
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unused
+    - varcheck
+    # Extra
+    - asciicheck
+    - cyclop
+    - gocritic
+    - gofmt
+    - goimports
+    - gosec
+    - ifshort
+    - lll
+    - prealloc
+    - revive
+    - stylecheck
+    - unconvert
+    - whitespace
+
+linters-settings:
+  lll:
+    line-length: 120
+    tab-width: 4
+  goimports:
+    local-prefixes: github.com/arxeiss/sample-terraform-provider
+  cyclop:
+    max-complexity: 15
+  staticcheck:
+    go: "1.16"
+    checks: ["all", "-ST1000"]
+  stylecheck:
+    go: "1.16"
+    checks: ["all", "-ST1000"]
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    - linters:
+        - revive
+      text: 'exported .* should have comment .*or be unexported'
