@@ -1,18 +1,15 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
 
-type VirtualMachine struct {
-	ID            int64
-	Name          string
-	DisplayName   *string
-	RAMSize       int
-	NetworkID     *int
-	NetworkIPAddr *string
-	PublicIPAddr  *string
-}
+	"github.com/sirupsen/logrus"
+
+	"github.com/arxeiss/sample-terraform-provider/entities"
+)
 
 type virtualMachineMapper struct {
+	log        *logrus.Entry
 	findByID   *sql.Stmt
 	findByName *sql.Stmt
 	insert     *sql.Stmt
@@ -20,19 +17,21 @@ type virtualMachineMapper struct {
 	delete     *sql.Stmt
 }
 
-func getVirtualMachineMapper(db *sql.DB) (*virtualMachineMapper, error) {
-	ret := &virtualMachineMapper{}
+func getVirtualMachineMapper(db *sql.DB, log *logrus.Entry) (*virtualMachineMapper, error) {
+	ret := &virtualMachineMapper{log: log}
 	var err error
 
 	ret.findByID, err = db.Prepare(`SELECT id, name, display_name, ram_size, network_id, network_ip, public_ip
 		FROM virtual_machines WHERE id = ?`)
 	if err != nil {
+		log.Error("Cannot prepare 'findByID' statement: ", err)
 		return nil, err
 	}
 
 	ret.findByName, err = db.Prepare(`SELECT id, name, display_name, ram_size, network_id, network_ip, public_ip
 		FROM virtual_machines WHERE name = ?`)
 	if err != nil {
+		log.Error("Cannot prepare 'findByName' statement: ", err)
 		return nil, err
 	}
 
@@ -40,6 +39,7 @@ func getVirtualMachineMapper(db *sql.DB) (*virtualMachineMapper, error) {
 		INSERT INTO virtual_machines(name, display_name, ram_size, network_id, network_ip, public_ip)
 		VALUES(?, ?, ?, ?, ?, ?)`)
 	if err != nil {
+		log.Error("Cannot prepare 'insert' statement: ", err)
 		return nil, err
 	}
 
@@ -47,49 +47,57 @@ func getVirtualMachineMapper(db *sql.DB) (*virtualMachineMapper, error) {
 		SET display_name = ?, ram_size = ?, network_id = ?, network_ip = ?, public_ip = ?
 		WHERE id = ?`)
 	if err != nil {
+		log.Error("Cannot prepare 'update' statement: ", err)
 		return nil, err
 	}
 
 	ret.delete, err = db.Prepare(`DELETE FROM virtual_machines WHERE id = ?`)
 	if err != nil {
+		log.Error("Cannot prepare 'delete' statement: ", err)
 		return nil, err
 	}
 
 	return ret, nil
 }
 
-func (m *virtualMachineMapper) FindByID(id int) (*VirtualMachine, error) {
-	ret := &VirtualMachine{}
+func (m *virtualMachineMapper) FindByID(id int64) (*entities.VirtualMachine, error) {
+	ret := &entities.VirtualMachine{}
+	m.log.WithField("id", id).Trace("Finding by ID")
 	err := m.findByID.
 		QueryRow(id).
-		Scan(&ret.ID, &ret.Name, &ret.DisplayName, &ret.RAMSize, &ret.NetworkID, &ret.NetworkIPAddr, &ret.PublicIPAddr)
+		Scan(&ret.ID, &ret.Name, &ret.DisplayName, &ret.RAMSizeMB, &ret.NetworkID, &ret.NetworkIP, &ret.PublicIP)
 
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
 	return ret, err
 }
 
-func (m *virtualMachineMapper) FindByName(name string) (*VirtualMachine, error) {
-	ret := &VirtualMachine{}
-	err := m.findByID.
+func (m *virtualMachineMapper) FindByName(name string) (*entities.VirtualMachine, error) {
+	ret := &entities.VirtualMachine{}
+	m.log.WithField("name", name).Trace("Finding by name")
+	err := m.findByName.
 		QueryRow(name).
-		Scan(&ret.ID, &ret.Name, &ret.DisplayName, &ret.RAMSize, &ret.NetworkID, &ret.NetworkIPAddr, &ret.PublicIPAddr)
+		Scan(&ret.ID, &ret.Name, &ret.DisplayName, &ret.RAMSizeMB, &ret.NetworkID, &ret.NetworkIP, &ret.PublicIP)
 
 	return ret, err
 }
 
-func (m *virtualMachineMapper) Save(vm *VirtualMachine) (*VirtualMachine, error) {
+func (m *virtualMachineMapper) Save(evm *entities.VirtualMachine) (*entities.VirtualMachine, error) {
 	var err error
-	if vm.ID > 0 {
+	if evm.ID > 0 {
+		m.log.WithField("id", evm.ID).Trace("Updating")
 		err = handleChangeResult(
-			m.update.Exec(vm.DisplayName, vm.RAMSize, vm.NetworkID, vm.NetworkIPAddr, vm.PublicIPAddr, vm.ID),
+			m.update.Exec(evm.DisplayName, evm.RAMSizeMB, evm.NetworkID, evm.NetworkIP, evm.PublicIP, evm.ID),
 		)
 	} else {
-		vm.ID, err = handleInsertResult(
-			m.insert.Exec(vm.Name, vm.DisplayName, vm.RAMSize, vm.NetworkID, vm.NetworkIPAddr, vm.PublicIPAddr),
+		m.log.WithField("name", evm.Name).Trace("Inserting")
+		evm.ID, err = handleInsertResult(
+			m.insert.Exec(evm.Name, evm.DisplayName, evm.RAMSizeMB, evm.NetworkID, evm.NetworkIP, evm.PublicIP),
 		)
 	}
 
-	return vm, err
+	return evm, err
+}
+
+func (m *virtualMachineMapper) Delete(id int64) error {
+	m.log.WithField("id", id).Trace("Deleting")
+	return handleChangeResult(m.delete.Exec(id))
 }
