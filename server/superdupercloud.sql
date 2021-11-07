@@ -13,13 +13,6 @@ CREATE UNIQUE INDEX "network_name" ON "networks" ("name");
 
 INSERT INTO "networks" ("id", "name", "display_name", "ip_range", "use_dhcp") VALUES (1,	'super-duper-network',	'The best network ever',	'192.168.0.0/16',	1);
 
-DROP TABLE IF EXISTS "sqlite_sequence";
-CREATE TABLE sqlite_sequence(name,seq);
-
-INSERT INTO "sqlite_sequence" ("name", "seq") VALUES ('networks',	1);
-INSERT INTO "sqlite_sequence" ("name", "seq") VALUES ('storages',	1);
-INSERT INTO "sqlite_sequence" ("name", "seq") VALUES ('virtual_machines',	1);
-
 DROP TABLE IF EXISTS "storages";
 CREATE TABLE "storages" (
   "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,

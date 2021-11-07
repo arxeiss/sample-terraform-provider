@@ -49,7 +49,7 @@ func networkDataProvider() *schema.Resource {
 	}
 }
 
-func resCreateNetworkContext(ctx context.Context, data *schema.ResourceData, meta interface{}) (d diag.Diagnostics) {
+func saveNetwork(data *schema.ResourceData, meta interface{}) (d diag.Diagnostics) {
 	client := fromMeta(&d, meta)
 	if client == nil {
 		return d
@@ -71,18 +71,21 @@ func resCreateNetworkContext(ctx context.Context, data *schema.ResourceData, met
 		return d
 	}
 
-	respBody, err := client.Create("/network", reqBody)
+	var respBody []byte
+	if data.Id() == "" {
+		respBody, err = client.Create("/network", reqBody)
+	} else {
+		respBody, err = client.Update("/network/"+data.Id(), reqBody)
+	}
 	if hasFailed(&d, err, "request failed") {
 		return d
 	}
 
-	if err := json.Unmarshal(respBody, &network); hasFailed(&d, err, "failed to unmarshal response into struct") {
-		return d
-	}
+	return flattenNetwork(d, data, respBody)
+}
 
-	data.SetId(strconv.FormatInt(network.ID, 10))
-
-	return d
+func resCreateNetworkContext(_ context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return saveNetwork(data, meta)
 }
 
 func resReadNetworkContext(_ context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -104,48 +107,11 @@ func readNetwork(uri string, data *schema.ResourceData, meta interface{}) (d dia
 		return d
 	}
 
-	network := &entities.Network{}
-	if err := json.Unmarshal(resp, &network); hasFailed(&d, err, "failed to unmarshal response into struct") {
-		return d
-	}
-
-	data.SetId(strconv.FormatInt(network.ID, 10))
-	set(&d, data, "name", network.Name)
-	set(&d, data, "display_name", network.DisplayName)
-	set(&d, data, "ip_range", network.IPRange)
-	set(&d, data, "use_dhcp", network.UseDHCP)
-
-	return d
+	return flattenNetwork(d, data, resp)
 }
 
-func resUpdateNetworkContext(ctx context.Context, data *schema.ResourceData, meta interface{}) (d diag.Diagnostics) {
-	client := fromMeta(&d, meta)
-	if client == nil {
-		return d
-	}
-
-	network := &entities.Network{
-		Name:        data.Get("name").(string),
-		DisplayName: toStrPtr(data.Get("display_name").(string)),
-		IPRange:     data.Get("ip_range").(string),
-		UseDHCP:     data.Get("use_dhcp").(bool),
-	}
-
-	if isInvalid(&d, network) {
-		return d
-	}
-
-	reqBody, err := json.Marshal(network)
-	if hasFailed(&d, err, "failed to marshall struct into JSON") {
-		return d
-	}
-
-	_, err = client.Update("/network/"+data.Id(), reqBody)
-	if hasFailed(&d, err, "request failed") {
-		return d
-	}
-
-	return d
+func resUpdateNetworkContext(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return saveNetwork(data, meta)
 }
 
 func resDeleteNetworkContext(ctx context.Context, data *schema.ResourceData, meta interface{}) (d diag.Diagnostics) {
@@ -157,6 +123,21 @@ func resDeleteNetworkContext(ctx context.Context, data *schema.ResourceData, met
 	if hasFailed(&d, client.Delete("/network/"+data.Id()), "request failed") {
 		return d
 	}
+
+	return d
+}
+
+func flattenNetwork(d diag.Diagnostics, data *schema.ResourceData, body []byte) diag.Diagnostics {
+	network := &entities.Network{}
+	if err := json.Unmarshal(body, &network); hasFailed(&d, err, "failed to unmarshal response into struct") {
+		return d
+	}
+
+	data.SetId(strconv.FormatInt(network.ID, 10))
+	set(&d, data, "name", network.Name)
+	set(&d, data, "display_name", network.DisplayName)
+	set(&d, data, "ip_range", network.IPRange)
+	set(&d, data, "use_dhcp", network.UseDHCP)
 
 	return d
 }

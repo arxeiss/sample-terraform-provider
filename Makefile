@@ -1,7 +1,7 @@
 .PHONY: lint fix_lint install_tools terraform_build start_server
 
 lint:
-	golangci-lint run ./...
+	golangci-lint run --timeout 2m0s ./...
 
 fix_lint:
 	golangci-lint run --fix

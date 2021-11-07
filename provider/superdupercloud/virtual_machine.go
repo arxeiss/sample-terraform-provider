@@ -62,7 +62,7 @@ func vmDataProvider() *schema.Resource {
 	}
 }
 
-func resCreateVMContext(_ context.Context, data *schema.ResourceData, meta interface{}) (d diag.Diagnostics) {
+func saveVM(data *schema.ResourceData, meta interface{}) (d diag.Diagnostics) {
 	client := fromMeta(&d, meta)
 	if client == nil {
 		return d
@@ -86,18 +86,22 @@ func resCreateVMContext(_ context.Context, data *schema.ResourceData, meta inter
 		return d
 	}
 
-	respBody, err := client.Create("/vm", reqBody)
+	var respBody []byte
+	if data.Id() == "" {
+		respBody, err = client.Create("/vm", reqBody)
+	} else {
+		respBody, err = client.Update("/vm/"+data.Id(), reqBody)
+	}
+
 	if hasFailed(&d, err, "request failed") {
 		return d
 	}
 
-	if err := json.Unmarshal(respBody, &vm); hasFailed(&d, err, "failed to unmarshal response into struct") {
-		return d
-	}
+	return flattenVM(d, data, respBody)
+}
 
-	data.SetId(strconv.FormatInt(vm.ID, 10))
-
-	return d
+func resCreateVMContext(_ context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return saveVM(data, meta)
 }
 
 func resReadVMContext(_ context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -119,52 +123,11 @@ func readVM(uri string, data *schema.ResourceData, meta interface{}) (d diag.Dia
 		return d
 	}
 
-	vm := &entities.VirtualMachine{}
-	if err := json.Unmarshal(resp, &vm); hasFailed(&d, err, "failed to unmarshal response into struct") {
-		return d
-	}
-
-	data.SetId(strconv.FormatInt(vm.ID, 10))
-	set(&d, data, "name", vm.Name)
-	set(&d, data, "display_name", vm.DisplayName)
-	set(&d, data, "ram_size_mb", vm.RAMSizeMB)
-	set(&d, data, "network_id", vm.NetworkID)
-	set(&d, data, "network_ip", vm.NetworkIP)
-	set(&d, data, "public_ip", vm.PublicIP)
-
-	return d
+	return flattenVM(d, data, resp)
 }
 
-func resUpdateVMContext(_ context.Context, data *schema.ResourceData, meta interface{}) (d diag.Diagnostics) {
-	client := fromMeta(&d, meta)
-	if client == nil {
-		return d
-	}
-
-	vm := &entities.VirtualMachine{
-		Name:        data.Get("name").(string),
-		DisplayName: toStrPtr(data.Get("display_name").(string)),
-		RAMSizeMB:   data.Get("ram_size_mb").(int),
-		NetworkID:   toIntPtr(data.Get("network_id").(int)),
-		NetworkIP:   toStrPtr(data.Get("network_ip").(string)),
-		PublicIP:    toStrPtr(data.Get("public_ip").(string)),
-	}
-
-	if isInvalid(&d, vm) {
-		return d
-	}
-
-	reqBody, err := json.Marshal(vm)
-	if hasFailed(&d, err, "failed to marshall struct into JSON") {
-		return d
-	}
-
-	_, err = client.Update("/vm/"+data.Id(), reqBody)
-	if hasFailed(&d, err, "request failed") {
-		return d
-	}
-
-	return d
+func resUpdateVMContext(_ context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return saveVM(data, meta)
 }
 
 func resDeleteVMContext(_ context.Context, data *schema.ResourceData, meta interface{}) (d diag.Diagnostics) {
@@ -176,6 +139,23 @@ func resDeleteVMContext(_ context.Context, data *schema.ResourceData, meta inter
 	if hasFailed(&d, client.Delete("/vm/"+data.Id()), "request failed") {
 		return d
 	}
+
+	return d
+}
+
+func flattenVM(d diag.Diagnostics, data *schema.ResourceData, body []byte) diag.Diagnostics {
+	vm := &entities.VirtualMachine{}
+	if err := json.Unmarshal(body, &vm); hasFailed(&d, err, "failed to unmarshal response into struct") {
+		return d
+	}
+
+	data.SetId(strconv.FormatInt(vm.ID, 10))
+	set(&d, data, "name", vm.Name)
+	set(&d, data, "display_name", vm.DisplayName)
+	set(&d, data, "ram_size_mb", vm.RAMSizeMB)
+	set(&d, data, "network_id", vm.NetworkID)
+	set(&d, data, "network_ip", vm.NetworkIP)
+	set(&d, data, "public_ip", vm.PublicIP)
 
 	return d
 }

@@ -26,7 +26,7 @@ output storage {
 resource sdc_network main_network {
   name = "backbone"
   display_name = "Main backbone network"
-  ip_range = "192.168.1.0/28"
+  ip_range = "192.168.0.0/16"
   use_dhcp = true
 }
 
