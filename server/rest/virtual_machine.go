@@ -62,7 +62,7 @@ func (h *HTTPServer) editVM(c *gin.Context) {
 		h.serverError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, vm)
+	c.JSON(http.StatusOK, vm)
 }
 
 func (h *HTTPServer) deleteVM(c *gin.Context) {

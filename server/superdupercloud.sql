@@ -11,6 +11,14 @@ CREATE TABLE "networks" (
 
 CREATE UNIQUE INDEX "network_name" ON "networks" ("name");
 
+INSERT INTO "networks" ("id", "name", "display_name", "ip_range", "use_dhcp") VALUES (1,	'super-duper-network',	'The best network ever',	'192.168.0.0/16',	1);
+
+DROP TABLE IF EXISTS "sqlite_sequence";
+CREATE TABLE sqlite_sequence(name,seq);
+
+INSERT INTO "sqlite_sequence" ("name", "seq") VALUES ('networks',	1);
+INSERT INTO "sqlite_sequence" ("name", "seq") VALUES ('storages',	1);
+INSERT INTO "sqlite_sequence" ("name", "seq") VALUES ('virtual_machines',	1);
 
 DROP TABLE IF EXISTS "storages";
 CREATE TABLE "storages" (
@@ -28,6 +36,7 @@ CREATE TABLE "storages" (
 
 CREATE UNIQUE INDEX "storages_name" ON "storages" ("name");
 
+INSERT INTO "storages" ("id", "name", "display_name", "size", "network_id", "network_ip", "virtual_machine_id", "mount_path") VALUES (1,	'super-duper-storage',	'The best storage in universe',	1048576,	1,	'192.168.200.200',	NULL,	NULL);
 
 DROP TABLE IF EXISTS "virtual_machines";
 CREATE TABLE "virtual_machines" (
@@ -43,5 +52,6 @@ CREATE TABLE "virtual_machines" (
 
 CREATE UNIQUE INDEX "virtual_machines_name" ON "virtual_machines" ("name");
 
+INSERT INTO "virtual_machines" ("id", "name", "display_name", "ram_size", "network_id", "network_ip", "public_ip") VALUES (1,	'super-duper-vm',	'The best VM',	4096,	1,	NULL,	'123.123.123.123');
 
 --

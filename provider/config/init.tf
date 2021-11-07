@@ -11,7 +11,7 @@ terraform {
 
 variable "endpoint" {
   description = "Configuration API Endpoint"
-  default     = "localhost:8000"
+  default     = "http://localhost:8090"
   type        = string
 }
 

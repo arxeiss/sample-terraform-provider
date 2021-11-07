@@ -62,7 +62,7 @@ func (h *HTTPServer) editNetwork(c *gin.Context) {
 		h.serverError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, n)
+	c.JSON(http.StatusOK, n)
 }
 
 func (h *HTTPServer) deleteNetwork(c *gin.Context) {

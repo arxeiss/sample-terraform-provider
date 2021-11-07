@@ -34,21 +34,21 @@ func NewHTTPServer(log *logrus.Entry, db *database.DB, token string) *HTTPServer
 	vmg := r.Group("vm")
 	{
 		vmg.GET("/:id", h.getVM)
-		vmg.PUT("/", h.createVM)
+		vmg.PUT("", h.createVM)
 		vmg.POST("/:id", h.editVM)
 		vmg.DELETE("/:id", h.deleteVM)
 	}
 	ng := r.Group("network")
 	{
 		ng.GET("/:id", h.getNetwork)
-		ng.PUT("/", h.createNetwork)
+		ng.PUT("", h.createNetwork)
 		ng.POST("/:id", h.editNetwork)
 		ng.DELETE("/:id", h.deleteNetwork)
 	}
 	sg := r.Group("storage")
 	{
 		sg.GET("/:id", h.getStorage)
-		sg.PUT("/", h.createStorage)
+		sg.PUT("", h.createStorage)
 		sg.POST("/:id", h.editStorage)
 		sg.DELETE("/:id", h.deleteStorage)
 	}

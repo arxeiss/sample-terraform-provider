@@ -68,7 +68,7 @@ func (m *storageMapper) FindByID(id int64) (*entities.Storage, error) {
 	err := m.findByID.
 		QueryRow(id).
 		Scan(&ret.ID, &ret.Name, &ret.DisplayName, &ret.SizeMB,
-			&ret.NetworkID, &ret.NetworkID, &ret.VirtualMachineID, &ret.MountPath)
+			&ret.NetworkID, &ret.NetworkIP, &ret.VirtualMachineID, &ret.MountPath)
 
 	return ret, err
 }

@@ -62,7 +62,7 @@ func (h *HTTPServer) editStorage(c *gin.Context) {
 		h.serverError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, s)
+	c.JSON(http.StatusOK, s)
 }
 
 func (h *HTTPServer) deleteStorage(c *gin.Context) {
